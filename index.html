@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Журнал тренировок</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f4f2ed;
+  --card: #ffffff;
+  --border: #e2ddd5;
+  --border2: #ede9e2;
+  --text: #1c1c1c;
+  --muted: #999;
+  --light: #aaa;
+  --tag-bg: #e2ddd5;
+  --tag-color: #777;
+  --accent: #1c1c1c;
+  --green: #3a6a10;
+  --green-bg: #e8f5e0;
+  --green-border: #a8d878;
+  --yellow-bg: #fffbf0;
+  --yellow-border: #e6c84a;
+  --yellow-text: #7a5c00;
+  --row-hover: #eee9e0;
+  --input-row: #fafaf7;
+}
+body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+.fade { animation: fadeIn 0.2s ease; }
+
+/* Flash */
+#flash { display:none; position:fixed; top:14px; left:50%; transform:translateX(-50%); background:#1c1c1c; color:#f4f2ed; padding:9px 18px; border-radius:3px; font-size:13px; z-index:200; white-space:nowrap; }
+
+/* Header */
+.header { background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+.header-inner { max-width:960px; margin:0 auto; padding:14px 16px 0; }
+.header-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+h1 { font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:500; }
+.count { font-size:11px; color:#bbb; }
+.export-btn { font-family:inherit; font-size:12px; font-weight:500; background:var(--green-bg); border:1px solid var(--green-border); color:var(--green); border-radius:3px; padding:6px 11px; cursor:pointer; }
+.tabs { display:flex; overflow-x:auto; }
+.tab { background:none; border:none; font-family:inherit; font-size:12px; font-weight:500; padding:9px 14px; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; white-space:nowrap; }
+.tab.on { color:var(--text); border-bottom-color:var(--text); }
+
+/* Main */
+.main { max-width:960px; margin:0 auto; padding:16px; }
+
+/* Buttons */
+.btn { font-family:inherit; font-size:13px; font-weight:500; border:none; border-radius:3px; padding:7px 14px; cursor:pointer; }
+.btn-p { background:#1c1c1c; color:#f4f2ed; }
+.btn-g { background:none; border:1px solid #ccc; color:#555; }
+.btn-e { background:var(--yellow-bg); border:1px solid var(--yellow-border); color:var(--yellow-text); }
+
+/* Cards */
+.card { background:#fff; border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-bottom:10px; }
+.card-head { display:flex; justify-content:space-between; align-items:center; padding:11px 14px; cursor:pointer; user-select:none; flex-wrap:wrap; gap:8px; }
+.card-head:hover { background:#faf8f4; }
+.card-body { overflow-x:auto; }
+.date-badge { font-family:'IBM Plex Mono',monospace; font-size:11px; background:#1c1c1c; color:#f4f2ed; padding:3px 8px; border-radius:2px; }
+.type-label { font-size:12px; color:#888; font-weight:500; }
+.ex-count { font-size:11px; color:#ccc; }
+.card-actions { display:flex; gap:6px; align-items:center; }
+.chevron { color:#bbb; font-size:11px; }
+
+/* Table */
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th { text-align:left; padding:7px 10px; font-size:10px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:var(--light); border-bottom:2px solid var(--border); background:#f4f2ed; }
+td { padding:8px 10px; border-bottom:1px solid var(--border2); vertical-align:middle; }
+tr:hover td { background:var(--row-hover); }
+.mtag { display:inline-block; font-size:9px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; padding:2px 6px; border-radius:2px; background:var(--tag-bg); color:var(--tag-color); white-space:nowrap; }
+.ex-name { font-weight:500; }
+.num { font-family:'IBM Plex Mono',monospace; font-size:12px; white-space:nowrap; }
+.note { color:#aaa; font-style:italic; font-size:11px; }
+
+/* Input rows */
+.input-row td { padding:4px 5px; background:var(--input-row); }
+input, select, textarea { font-family:inherit; font-size:12px; color:#1c1c1c; background:#fff; border:1px solid #ddd; border-radius:3px; padding:4px 7px; }
+input:focus, select:focus, textarea:focus { outline:2px solid #1c1c1c; border-color:#1c1c1c; }
+.del-btn { background:none; border:none; color:#ccc; cursor:pointer; font-size:13px; padding:2px 4px; }
+.del-btn:hover { color:#e53935; }
+
+/* Edit bar */
+.edit-bar { display:flex; gap:8px; padding:10px 14px; background:var(--yellow-bg); border-top:1px solid var(--yellow-border); flex-wrap:wrap; }
+
+/* Form section */
+.form-section { background:#fff; border:1px solid var(--border); border-radius:4px; padding:14px; margin-bottom:12px; }
+.field-label { font-size:10px; color:var(--light); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.06em; }
+.field-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+
+/* Import textarea */
+.import-hint { font-size:12px; color:#666; line-height:1.6; margin-bottom:12px; background:#f9f7f3; border:1px solid var(--border); border-radius:3px; padding:10px; }
+.import-hint em { color:#999; }
+
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-thumb { background:#ccc; }
+
+/* Weeks filter */
+.filter-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.filter-label { font-size:10px; color:var(--light); text-transform:uppercase; letter-spacing:0.06em; }
+</style>
+</head>
+<body>
+
+<div id="flash"></div>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <h1>ЖУРНАЛ ТРЕНИРОВОК</h1>
+        <span class="count" id="wcount"></span>
+      </div>
+      <button class="export-btn" onclick="handleExport()">📋 Для Claude</button>
+    </div>
+    <div class="tabs">
+      <button class="tab on" onclick="switchTab('history',this)">История</button>
+      <button class="tab" onclick="switchTab('weeks',this)">По неделям</button>
+      <button class="tab" onclick="switchTab('new',this)">+ Новая</button>
+      <button class="tab" onclick="switchTab('import',this)">⬇ От Claude</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div id="tab-history" class="fade"></div>
+  <div id="tab-weeks" class="fade" style="display:none"></div>
+  <div id="tab-new" class="fade" style="display:none"></div>
+  <div id="tab-import" class="fade" style="display:none"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'workout-log-v3';
+const MUSCLE_GROUPS = ['Грудь','Спина','Плечи','Бицепс','Трицепс','Ноги','Ягодицы','Кор','Full Body','Другое'];
+const WORKOUT_TYPES = ['Full Body','Грудь + Трицепс','Спина + Бицепс','Ноги','Плечи','Другое'];
+
+let workouts = [];
+let expandedId = null;
+let editingId = null;
+let editRows = [];
+let editDate = '';
+let editType = '';
+let currentTab = 'history';
+
+const PRELOADED = [
+  {
+    id: 1746700000001,
+    date: '2026-05-12',
+    type: 'Грудь + Трицепс',
+    rows: [
+      {muscle:'Грудь', exercise:'Жим лёжа', weight:'50/60/65', sets:'4', reps:'10/8/5/5', note:'Все рабочие'},
+      {muscle:'Грудь', exercise:'Жим в тренажере в наклоне', weight:'40', sets:'4', reps:'8', note:'+2 читинг в каждом подходе'},
+      {muscle:'Плечи', exercise:'Подъём блина вперёд', weight:'10', sets:'4', reps:'10', note:''},
+      {muscle:'Плечи', exercise:'Махи в наклоне', weight:'6', sets:'3', reps:'8', note:''},
+      {muscle:'Кор', exercise:'Скручивания', weight:'—', sets:'3', reps:'10', note:''},
+    ]
+  },
+  {
+    id: 1746614400000,
+    date: '2026-05-11',
+    type: 'Спина + Бицепс',
+    rows: [
+      {muscle:'Спина', exercise:'Тяга в наклоне', weight:'55/50', sets:'3 раб.', reps:'10/10/10', note:'Разм: б/в, 40, 50×8. Последние 2 на 55 пол амплитуды, сброс до 50 чисто'},
+      {muscle:'Спина', exercise:'Румынская тяга', weight:'50', sets:'2 раб.', reps:'12/10', note:'Разм: 40×12. Боль в пояснице, закончил раньше'},
+< truncated lines 167-389 >
+  </div>` + (filtered.length===0 ? '<div style="color:#bbb;text-align:center;padding:40px 0;font-size:13px">Нет тренировок</div>' :
+  filtered.map(w=>`<div style="margin-bottom:22px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span class="date-badge">${fmtDate(w.date)}</span>
+      <span class="type-label">${w.type}</span>
+    </div>
+    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:4px;background:#fff">
+      <table>
+        <thead><tr><th>Группа</th><th>Упражнение</th><th>Вес</th><th>Подх.</th><th>Повт.</th><th>Комментарий</th></tr></thead>
+        <tbody>${w.rows.map(r=>`<tr>
+          <td><span class="mtag">${r.muscle}</span></td>
+          <td class="ex-name">${r.exercise}</td>
+          <td class="num">${r.weight}${r.weight&&r.weight!=='—'?' кг':''}</td>
+          <td class="num">${r.sets}</td>
+          <td class="num">${r.reps}</td>
+          <td class="note">${r.note}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>`).join(''));
+}
+
+// ── NEW ──
+function renderNew() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('tab-new').innerHTML = `
+    <div class="form-section">
+      <div class="field-row">
+        <div><div class="field-label">Дата</div><input type="date" id="new-date" value="${today}"></div>
+        <div><div class="field-label">Тип</div>
+          <select id="new-type">${WORKOUT_TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div style="overflow-x:auto;border:1px solid var(--border);border-radius:3px;margin-bottom:10px">
+        <table>
+          <thead><tr><th style="min-width:100px">Группа</th><th style="min-width:150px">Упражнение</th><th style="min-width:65px">Вес</th><th style="min-width:50px">Подх.</th><th style="min-width:50px">Повт.</th><th style="min-width:150px">Комментарий</th><th></th></tr></thead>
+          <tbody id="new-tbody"><tr class="input-row">
+            <td><select style="font-size:11px;padding:3px 5px"><option value="">—</option>${MUSCLE_GROUPS.map(m=>`<option>${m}</option>`).join('')}</select></td>
+            <td><input placeholder="Упражнение" style="width:100%"></td>
+            <td><input placeholder="80" style="width:55px"></td>
+            <td><input placeholder="3" style="width:40px"></td>
+            <td><input placeholder="8" style="width:40px"></td>
+            <td><input placeholder="Заметка" style="width:100%"></td>
+            <td><button class="del-btn" onclick="this.closest('tr').remove()">✕</button></td>
+          </tr></tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-g" onclick="addNewRow()">+ Строка</button>
+        <button class="btn btn-p" onclick="saveNew()">Сохранить</button>
+      </div>
+    </div>`;
+}
+
+function addNewRow() {
+  const tbody = document.getElementById('new-tbody');
+  const tr = document.createElement('tr');
+  tr.className = 'input-row';
+  tr.innerHTML = `
+    <td><select style="font-size:11px;padding:3px 5px"><option value="">—</option>${MUSCLE_GROUPS.map(m=>`<option>${m}</option>`).join('')}</select></td>
+    <td><input placeholder="Упражнение" style="width:100%"></td>
+    <td><input placeholder="80" style="width:55px"></td>
+    <td><input placeholder="3" style="width:40px"></td>
+    <td><input placeholder="8" style="width:40px"></td>
+    <td><input placeholder="Заметка" style="width:100%"></td>
+    <td><button class="del-btn" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function saveNew() {
+  const date = document.getElementById('new-date').value;
+  const type = document.getElementById('new-type').value;
+  const rows = [];
+  document.querySelectorAll('#new-tbody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input, select');
+    const exercise = inputs[1].value.trim();
+    if (!exercise) return;
+    rows.push({
+      muscle: inputs[0].value,
+      exercise,
+      weight: inputs[2].value,
+      sets: inputs[3].value,
+      reps: inputs[4].value,
+      note: inputs[5].value
+    });
+  });
+  if (!rows.length) { showFlash('Добавь хотя бы одно упражнение'); return; }
+  const w = {id: Date.now(), date, type, rows};
+  workouts = [w, ...workouts].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  expandedId = w.id;
+  save();
+  switchTab('history', document.querySelector('.tab'));
+  showFlash('Тренировка сохранена ✓');
+}
+
+// ── IMPORT ──
+function renderImport() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('tab-import').innerHTML = `
+    <div class="form-section">
+      <div class="import-hint">
+        После тренировки скажи мне <em>«запиши в таблицу»</em> — я выдам таблицу в markdown. Скопируй её сюда и нажми «Импортировать».
+      </div>
+      <div class="field-row">
+        <div><div class="field-label">Дата</div><input type="date" id="imp-date" value="${today}"></div>
+        <div><div class="field-label">Тип</div>
+          <select id="imp-type">${WORKOUT_TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
+        </div>
+      </div>
+      <textarea id="imp-text" rows="10" placeholder="Вставь сюда таблицу от Claude:&#10;&#10;| Группа | Упражнение | Вес | Подх. | Повт. | Комментарий |&#10;|---|---|---|---|---|---|&#10;| Спина | Тяга в наклоне | 55/50 | 3 | 10/10/10 | ... |" style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #ddd;border-radius:3px;padding:10px;resize:vertical;line-height:1.5;margin-bottom:10px"></textarea>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-p" onclick="handleImport()">Импортировать</button>
+        <button class="btn btn-g" onclick="document.getElementById('imp-text').value=''">Очистить</button>
+      </div>
+    </div>`;
+}
+
+function handleImport() {
+  const text = document.getElementById('imp-text').value;
+  const date = document.getElementById('imp-date').value;
+  const type = document.getElementById('imp-type').value;
+  if (!text.trim()) { showFlash('Вставь таблицу от Claude'); return; }
+  const lines = text.trim().split('\n');
+  const rows = [];
+  for (const line of lines) {
+    if (!line.startsWith('|') || line.includes('---') || line.toLowerCase().includes('группа')) continue;
+    const cells = line.split('|').map(c=>c.trim()).filter((_,i,a)=>i>0&&i<a.length-1);
+    if (cells.length < 5) continue;
+    const [muscle, exercise, weight, sets, reps, ...noteParts] = cells;
+    rows.push({muscle, exercise, weight:weight.replace(/кг/gi,'').trim(), sets, reps, note:noteParts.join(' | ').trim()});
+  }
+  if (!rows.length) { showFlash('Не удалось распознать — убедись что формат правильный'); return; }
+  const w = {id: Date.now(), date, type, rows};
+  workouts = [w, ...workouts].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  expandedId = w.id;
+  save();
+  switchTab('history', document.querySelector('.tab'));
+  showFlash(`Импортировано ${rows.length} упражнений ✓`);
+}
+
+// ── EXPORT ──
+function handleExport() {
+  if (!workouts.length) { showFlash('Нет данных'); return; }
+  const lines = ['=== МОЙ ЖУРНАЛ ТРЕНИРОВОК ===\n'];
+  workouts.slice(0,20).forEach(w => {
+    lines.push(`📅 ${fmtDate(w.date)} — ${w.type}`);
+    w.rows.forEach(r => {
+      let s = `  • ${r.muscle?'['+r.muscle+'] ':''}${r.exercise}`;
+      if (r.weight && r.weight!=='—') s += ` — ${r.weight}кг`;
+      if (r.sets) s += `, ${r.sets} подх`;
+      if (r.reps) s += ` × ${r.reps}`;
+      if (r.note) s += ` (${r.note})`;
+      lines.push(s);
+    });
+    lines.push('');
+  });
+  lines.push('=== КОНЕЦ ЖУРНАЛА ===');
+  navigator.clipboard.writeText(lines.join('\n'))
+    .then(() => showFlash('Скопировано! Вставь в новый чат с Claude ✓'))
+    .catch(() => showFlash('Ошибка копирования'));
+}
+
+load();
+</script>
+</body>
+</html>
