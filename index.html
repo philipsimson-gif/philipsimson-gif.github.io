@@ -136,8 +136,8 @@ function wkLabel(d){
   return f(m)+' – '+f(s);
 }
 
-function mgSel(val,onch){
-  return '<select onchange="'+onch+'" style="font-size:11px;padding:3px 5px;width:auto"><option value="">—</option>'+MG.map(m=>'<option'+(m===val?' selected':'')+'>'+m+'</option>').join('')+'</select>';
+function mgSel(val,onch){ return '<input value="'+val+'" oninput="'+onch+'" placeholder="Группа мышц" style="font-size:11px;padding:3px 5px;width:100px">'; }
+
 }
 function wtSel(id,val){
   return '<select id="'+id+'" style="font-size:13px">'+WT.map(t=>'<option'+(t===val?' selected':'')+'>'+t+'</option>').join('')+'</select>';
