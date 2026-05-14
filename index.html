@@ -2,329 +2,369 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Журнал тренировок</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренировки</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #f4f2ed;
-  --card: #ffffff;
-  --border: #e2ddd5;
-  --border2: #ede9e2;
-  --text: #1c1c1c;
-  --muted: #999;
-  --light: #aaa;
-  --tag-bg: #e2ddd5;
-  --tag-color: #777;
-  --accent: #1c1c1c;
-  --green: #3a6a10;
-  --green-bg: #e8f5e0;
-  --green-border: #a8d878;
-  --yellow-bg: #fffbf0;
-  --yellow-border: #e6c84a;
-  --yellow-text: #7a5c00;
-  --row-hover: #eee9e0;
-  --input-row: #fafaf7;
-}
-body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
-.fade { animation: fadeIn 0.2s ease; }
-
-/* Flash */
-#flash { display:none; position:fixed; top:14px; left:50%; transform:translateX(-50%); background:#1c1c1c; color:#f4f2ed; padding:9px 18px; border-radius:3px; font-size:13px; z-index:200; white-space:nowrap; }
-
-/* Header */
-.header { background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
-.header-inner { max-width:960px; margin:0 auto; padding:14px 16px 0; }
-.header-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-h1 { font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:500; }
-.count { font-size:11px; color:#bbb; }
-.export-btn { font-family:inherit; font-size:12px; font-weight:500; background:var(--green-bg); border:1px solid var(--green-border); color:var(--green); border-radius:3px; padding:6px 11px; cursor:pointer; }
-.tabs { display:flex; overflow-x:auto; }
-.tab { background:none; border:none; font-family:inherit; font-size:12px; font-weight:500; padding:9px 14px; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; white-space:nowrap; }
-.tab.on { color:var(--text); border-bottom-color:var(--text); }
-
-/* Main */
-.main { max-width:960px; margin:0 auto; padding:16px; }
-
-/* Buttons */
-.btn { font-family:inherit; font-size:13px; font-weight:500; border:none; border-radius:3px; padding:7px 14px; cursor:pointer; }
-.btn-p { background:#1c1c1c; color:#f4f2ed; }
-.btn-g { background:none; border:1px solid #ccc; color:#555; }
-.btn-e { background:var(--yellow-bg); border:1px solid var(--yellow-border); color:var(--yellow-text); }
-
-/* Cards */
-.card { background:#fff; border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-bottom:10px; }
-.card-head { display:flex; justify-content:space-between; align-items:center; padding:11px 14px; cursor:pointer; user-select:none; flex-wrap:wrap; gap:8px; }
-.card-head:hover { background:#faf8f4; }
-.card-body { overflow-x:auto; }
-.date-badge { font-family:'IBM Plex Mono',monospace; font-size:11px; background:#1c1c1c; color:#f4f2ed; padding:3px 8px; border-radius:2px; }
-.type-label { font-size:12px; color:#888; font-weight:500; }
-.ex-count { font-size:11px; color:#ccc; }
-.card-actions { display:flex; gap:6px; align-items:center; }
-.chevron { color:#bbb; font-size:11px; }
-
-/* Table */
-table { width:100%; border-collapse:collapse; font-size:12px; }
-th { text-align:left; padding:7px 10px; font-size:10px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:var(--light); border-bottom:2px solid var(--border); background:#f4f2ed; }
-td { padding:8px 10px; border-bottom:1px solid var(--border2); vertical-align:middle; }
-tr:hover td { background:var(--row-hover); }
-.mtag { display:inline-block; font-size:9px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; padding:2px 6px; border-radius:2px; background:var(--tag-bg); color:var(--tag-color); white-space:nowrap; }
-.ex-name { font-weight:500; }
-.num { font-family:'IBM Plex Mono',monospace; font-size:12px; white-space:nowrap; }
-.note { color:#aaa; font-style:italic; font-size:11px; }
-
-/* Input rows */
-.input-row td { padding:4px 5px; background:var(--input-row); }
-input, select, textarea { font-family:inherit; font-size:12px; color:#1c1c1c; background:#fff; border:1px solid #ddd; border-radius:3px; padding:4px 7px; }
-input:focus, select:focus, textarea:focus { outline:2px solid #1c1c1c; border-color:#1c1c1c; }
-.del-btn { background:none; border:none; color:#ccc; cursor:pointer; font-size:13px; padding:2px 4px; }
-.del-btn:hover { color:#e53935; }
-
-/* Edit bar */
-.edit-bar { display:flex; gap:8px; padding:10px 14px; background:var(--yellow-bg); border-top:1px solid var(--yellow-border); flex-wrap:wrap; }
-
-/* Form section */
-.form-section { background:#fff; border:1px solid var(--border); border-radius:4px; padding:14px; margin-bottom:12px; }
-.field-label { font-size:10px; color:var(--light); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.06em; }
-.field-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
-
-/* Import textarea */
-.import-hint { font-size:12px; color:#666; line-height:1.6; margin-bottom:12px; background:#f9f7f3; border:1px solid var(--border); border-radius:3px; padding:10px; }
-.import-hint em { color:#999; }
-
-::-webkit-scrollbar { width:4px; height:4px; }
-::-webkit-scrollbar-thumb { background:#ccc; }
-
-/* Weeks filter */
-.filter-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-.filter-label { font-size:10px; color:var(--light); text-transform:uppercase; letter-spacing:0.06em; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f4f2ed;color:#1c1c1c;font-size:14px}
+.header{background:#fff;border-bottom:1px solid #e2ddd5;padding:14px 16px 0;position:sticky;top:0;z-index:10}
+.header h1{font-size:17px;font-weight:600;margin-bottom:10px}
+.tabs{display:flex;gap:0;overflow-x:auto}
+.tab{background:none;border:none;border-bottom:2px solid transparent;padding:9px 16px;font-size:13px;font-weight:500;color:#999;cursor:pointer;white-space:nowrap}
+.tab.on{color:#1c1c1c;border-bottom-color:#1c1c1c}
+.main{padding:14px 16px;max-width:700px;margin:0 auto}
+.card{background:#fff;border:1px solid #e2ddd5;border-radius:6px;margin-bottom:10px;overflow:hidden}
+.card-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.card-head:active{background:#f5f3ee}
+.badge{background:#1c1c1c;color:#fff;font-size:11px;padding:3px 8px;border-radius:3px}
+.card-body{overflow-x:auto;border-top:1px solid #f0ece4}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:7px 10px;font-size:10px;font-weight:600;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e2ddd5;background:#f9f8f5}
+td{padding:8px 10px;border-bottom:1px solid #f0ece4;vertical-align:top}
+.mtag{display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;padding:2px 6px;border-radius:2px;background:#e2ddd5;color:#777}
+.note{color:#aaa;font-style:italic;font-size:11px}
+.btn{border:none;border-radius:4px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-dark{background:#1c1c1c;color:#fff}
+.btn-outline{background:none;border:1px solid #ccc;color:#555}
+.btn-yellow{background:#fffbf0;border:1px solid #e6c84a;color:#7a5c00}
+.btn-green{background:#e8f5e0;border:1px solid #a8d878;color:#3a6a10}
+input,select,textarea{font-family:inherit;font-size:13px;color:#1c1c1c;background:#fff;border:1px solid #ddd;border-radius:4px;padding:6px 9px;width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+.label{font-size:10px;font-weight:600;text-transform:uppercase;color:#aaa;letter-spacing:.05em}
+.flash{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#1c1c1c;color:#fff;padding:9px 18px;border-radius:4px;font-size:13px;z-index:100;display:none;white-space:nowrap}
+.empty{text-align:center;color:#bbb;padding:50px 0;font-size:13px}
+.inp-row td{padding:4px 5px;background:#fafaf7}
+.del{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:2px 5px}
+.actions{display:flex;gap:6px}
+.edit-bar{padding:10px 14px;background:#fffbf0;border-top:1px solid #e6c84a;display:flex;gap:8px;flex-wrap:wrap}
 </style>
 </head>
 <body>
-
-<div id="flash"></div>
-
+<div class="flash" id="flash"></div>
 <div class="header">
-  <div class="header-inner">
-    <div class="header-top">
-      <div style="display:flex;align-items:baseline;gap:10px">
-        <h1>ЖУРНАЛ ТРЕНИРОВОК</h1>
-        <span class="count" id="wcount"></span>
-      </div>
-      <button class="export-btn" onclick="handleExport()">📋 Для Claude</button>
-    </div>
-    <div class="tabs">
-      <button class="tab on" onclick="switchTab('history',this)">История</button>
-      <button class="tab" onclick="switchTab('weeks',this)">По неделям</button>
-      <button class="tab" onclick="switchTab('new',this)">+ Новая</button>
-      <button class="tab" onclick="switchTab('import',this)">⬇ От Claude</button>
-    </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <h1>💪 Тренировки</h1>
+    <button class="btn btn-green" onclick="doExport()" style="font-size:12px;padding:6px 10px">📋 Для Claude</button>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="t-history" onclick="show('history')">История</button>
+    <button class="tab" id="t-weeks" onclick="show('weeks')">По неделям</button>
+    <button class="tab" id="t-new" onclick="show('new')">+ Новая</button>
+    <button class="tab" id="t-import" onclick="show('import')">⬇ От Claude</button>
   </div>
 </div>
-
 <div class="main">
-  <div id="tab-history" class="fade"></div>
-  <div id="tab-weeks" class="fade" style="display:none"></div>
-  <div id="tab-new" class="fade" style="display:none"></div>
-  <div id="tab-import" class="fade" style="display:none"></div>
+  <div id="p-history"></div>
+  <div id="p-weeks" style="display:none"></div>
+  <div id="p-new" style="display:none"></div>
+  <div id="p-import" style="display:none"></div>
 </div>
-
 <script>
-const STORAGE_KEY = 'workout-log-v3';
-const MUSCLE_GROUPS = ['Грудь','Спина','Плечи','Бицепс','Трицепс','Ноги','Ягодицы','Кор','Full Body','Другое'];
-const WORKOUT_TYPES = ['Full Body','Грудь + Трицепс','Спина + Бицепс','Ноги','Плечи','Другое'];
+const KEY='wlog-v4';
+const MG=['Грудь','Спина','Плечи','Бицепс','Трицепс','Ноги','Ягодицы','Кор','Full Body','Другое'];
+const WT=['Full Body','Грудь + Трицепс','Спина + Бицепс','Ноги','Плечи','Другое'];
+let W=[],openId=null,editId=null,eRows=[],eDate='',eType='';
 
-let workouts = [];
-let expandedId = null;
-let editingId = null;
-let editRows = [];
-let editDate = '';
-let editType = '';
-let currentTab = 'history';
+const PRE=[
+  {id:1746700000001,date:'2026-05-12',type:'Грудь + Трицепс',rows:[
+    {muscle:'Грудь',exercise:'Жим лёжа',weight:'50/60/65',sets:'4',reps:'10/8/5/5',note:'Все рабочие'},
+    {muscle:'Грудь',exercise:'Жим в тренажере в наклоне',weight:'40',sets:'4',reps:'8',note:'+2 читинг в каждом подходе'},
+    {muscle:'Плечи',exercise:'Подъём блина вперёд',weight:'10',sets:'4',reps:'10',note:''},
+    {muscle:'Плечи',exercise:'Махи в наклоне',weight:'6',sets:'3',reps:'8',note:''},
+    {muscle:'Кор',exercise:'Скручивания',weight:'—',sets:'3',reps:'10',note:''},
+  ]},
+  {id:1746614400000,date:'2026-05-11',type:'Спина + Бицепс',rows:[
+    {muscle:'Спина',exercise:'Тяга в наклоне',weight:'55/50',sets:'3',reps:'10/10/10',note:'Последние 2 пол амплитуды, сброс до 50 чисто'},
+    {muscle:'Спина',exercise:'Румынская тяга',weight:'50',sets:'2',reps:'12/10',note:'Боль в пояснице, закончил раньше'},
+    {muscle:'Спина',exercise:'Горизонтальная тяга одной рукой',weight:'20/22.5/23.75',sets:'3',reps:'12/10/8',note:'Упор грудь 2-й, сидушка 3-я. Последний +2 читинг'},
+    {muscle:'Спина',exercise:'Вертикальная тяга',weight:'40',sets:'2',reps:'10',note:'Краб, самый широкий хват'},
+    {muscle:'Бицепс',exercise:'Штанга на бицепс',weight:'7.5 кажд.',sets:'4',reps:'5+5',note:'Обратный + обычный хват'},
+    {muscle:'Плечи',exercise:'Задние дельты тренажер',weight:'35',sets:'3',reps:'10',note:''},
+    {muscle:'Кор',exercise:'Скручивания с весом',weight:'10/15',sets:'3',reps:'10/8/8',note:'Разм: б/в'},
+  ]},
+  {id:1746000000000,date:'2026-05-07',type:'Full Body',rows:[
+    {muscle:'Full Body',exercise:'Отжимания (гравитрон)',weight:'40',sets:'4',reps:'10',note:''},
+    {muscle:'Full Body',exercise:'Подтягивания (гравитрон)',weight:'40',sets:'4',reps:'8',note:''},
+    {muscle:'Грудь',exercise:'Пуловер с гантелью',weight:'22',sets:'3',reps:'6-8',note:'Тяжеловато, не мог делать полную амплитуду'},
+    {muscle:'Плечи',exercise:'Разводка на плечи',weight:'10',sets:'4',reps:'6',note:''},
+    {muscle:'Плечи',exercise:'Face pull',weight:'40',sets:'3',reps:'10',note:''},
+    {muscle:'Трицепс',exercise:'Трицепс с канатом',weight:'30',sets:'3',reps:'12',note:'Последний подход 35кг × 12'},
+    {muscle:'Кор',exercise:'Скручивания на тренажере',weight:'10',sets:'3',reps:'10',note:''},
+    {muscle:'Ноги',exercise:'Приседания плие',weight:'10',sets:'3',reps:'10',note:''},
+    {muscle:'Кор',exercise:'Птица-собака',weight:'—',sets:'2',reps:'12',note:''},
+  ]}
+];
 
-const PRELOADED = [
-  {
-    id: 1746700000001,
-    date: '2026-05-12',
-    type: 'Грудь + Трицепс',
-    rows: [
-      {muscle:'Грудь', exercise:'Жим лёжа', weight:'50/60/65', sets:'4', reps:'10/8/5/5', note:'Все рабочие'},
-      {muscle:'Грудь', exercise:'Жим в тренажере в наклоне', weight:'40', sets:'4', reps:'8', note:'+2 читинг в каждом подходе'},
-      {muscle:'Плечи', exercise:'Подъём блина вперёд', weight:'10', sets:'4', reps:'10', note:''},
-      {muscle:'Плечи', exercise:'Махи в наклоне', weight:'6', sets:'3', reps:'8', note:''},
-      {muscle:'Кор', exercise:'Скручивания', weight:'—', sets:'3', reps:'10', note:''},
-    ]
-  },
-  {
-    id: 1746614400000,
-    date: '2026-05-11',
-    type: 'Спина + Бицепс',
-    rows: [
-      {muscle:'Спина', exercise:'Тяга в наклоне', weight:'55/50', sets:'3 раб.', reps:'10/10/10', note:'Разм: б/в, 40, 50×8. Последние 2 на 55 пол амплитуды, сброс до 50 чисто'},
-      {muscle:'Спина', exercise:'Румынская тяга', weight:'50', sets:'2 раб.', reps:'12/10', note:'Разм: 40×12. Боль в пояснице, закончил раньше'},
-< truncated lines 167-389 >
-  </div>` + (filtered.length===0 ? '<div style="color:#bbb;text-align:center;padding:40px 0;font-size:13px">Нет тренировок</div>' :
-  filtered.map(w=>`<div style="margin-bottom:22px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-      <span class="date-badge">${fmtDate(w.date)}</span>
-      <span class="type-label">${w.type}</span>
-    </div>
-    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:4px;background:#fff">
-      <table>
-        <thead><tr><th>Группа</th><th>Упражнение</th><th>Вес</th><th>Подх.</th><th>Повт.</th><th>Комментарий</th></tr></thead>
-        <tbody>${w.rows.map(r=>`<tr>
-          <td><span class="mtag">${r.muscle}</span></td>
-          <td class="ex-name">${r.exercise}</td>
-          <td class="num">${r.weight}${r.weight&&r.weight!=='—'?' кг':''}</td>
-          <td class="num">${r.sets}</td>
-          <td class="num">${r.reps}</td>
-          <td class="note">${r.note}</td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>
-  </div>`).join(''));
+function load(){
+  try{
+    const s=localStorage.getItem(KEY);
+    if(s){
+      const p=JSON.parse(s);
+      const ids=new Set(p.map(x=>x.id));
+      W=[...PRE.filter(x=>!ids.has(x.id)),...p].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    } else { W=[...PRE]; }
+  } catch(e){ W=[...PRE]; }
+  save(); render();
 }
 
-// ── NEW ──
-function renderNew() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('tab-new').innerHTML = `
-    <div class="form-section">
-      <div class="field-row">
-        <div><div class="field-label">Дата</div><input type="date" id="new-date" value="${today}"></div>
-        <div><div class="field-label">Тип</div>
-          <select id="new-type">${WORKOUT_TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
-        </div>
-      </div>
-      <div style="overflow-x:auto;border:1px solid var(--border);border-radius:3px;margin-bottom:10px">
-        <table>
-          <thead><tr><th style="min-width:100px">Группа</th><th style="min-width:150px">Упражнение</th><th style="min-width:65px">Вес</th><th style="min-width:50px">Подх.</th><th style="min-width:50px">Повт.</th><th style="min-width:150px">Комментарий</th><th></th></tr></thead>
-          <tbody id="new-tbody"><tr class="input-row">
-            <td><select style="font-size:11px;padding:3px 5px"><option value="">—</option>${MUSCLE_GROUPS.map(m=>`<option>${m}</option>`).join('')}</select></td>
-            <td><input placeholder="Упражнение" style="width:100%"></td>
-            <td><input placeholder="80" style="width:55px"></td>
-            <td><input placeholder="3" style="width:40px"></td>
-            <td><input placeholder="8" style="width:40px"></td>
-            <td><input placeholder="Заметка" style="width:100%"></td>
-            <td><button class="del-btn" onclick="this.closest('tr').remove()">✕</button></td>
-          </tr></tbody>
-        </table>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-g" onclick="addNewRow()">+ Строка</button>
-        <button class="btn btn-p" onclick="saveNew()">Сохранить</button>
-      </div>
-    </div>`;
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(W));}catch(e){}
+  document.getElementById('flash'); // just touch DOM
 }
 
-function addNewRow() {
-  const tbody = document.getElementById('new-tbody');
-  const tr = document.createElement('tr');
-  tr.className = 'input-row';
-  tr.innerHTML = `
-    <td><select style="font-size:11px;padding:3px 5px"><option value="">—</option>${MUSCLE_GROUPS.map(m=>`<option>${m}</option>`).join('')}</select></td>
-    <td><input placeholder="Упражнение" style="width:100%"></td>
-    <td><input placeholder="80" style="width:55px"></td>
-    <td><input placeholder="3" style="width:40px"></td>
-    <td><input placeholder="8" style="width:40px"></td>
-    <td><input placeholder="Заметка" style="width:100%"></td>
-    <td><button class="del-btn" onclick="this.closest('tr').remove()">✕</button></td>`;
-  tbody.appendChild(tr);
+function flash(msg){
+  const el=document.getElementById('flash');
+  el.textContent=msg; el.style.display='block';
+  setTimeout(()=>el.style.display='none',2500);
 }
 
-function saveNew() {
-  const date = document.getElementById('new-date').value;
-  const type = document.getElementById('new-type').value;
-  const rows = [];
-  document.querySelectorAll('#new-tbody tr').forEach(tr => {
-    const inputs = tr.querySelectorAll('input, select');
-    const exercise = inputs[1].value.trim();
-    if (!exercise) return;
-    rows.push({
-      muscle: inputs[0].value,
-      exercise,
-      weight: inputs[2].value,
-      sets: inputs[3].value,
-      reps: inputs[4].value,
-      note: inputs[5].value
-    });
+function fmtDate(d){
+  return new Date(d+'T12:00:00').toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'});
+}
+
+function wkKey(d){
+  const dt=new Date(d),dy=dt.getDay()||7;
+  const m=new Date(dt); m.setDate(dt.getDate()-(dy-1));
+  return m.toISOString().split('T')[0];
+}
+function wkLabel(d){
+  const dt=new Date(d),dy=dt.getDay()||7;
+  const m=new Date(dt); m.setDate(dt.getDate()-(dy-1));
+  const s=new Date(m); s.setDate(m.getDate()+6);
+  const f=x=>x.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+  return f(m)+' – '+f(s);
+}
+
+function mgSel(val,onch){
+  return '<select onchange="'+onch+'" style="font-size:11px;padding:3px 5px;width:auto"><option value="">—</option>'+MG.map(m=>'<option'+(m===val?' selected':'')+'>'+m+'</option>').join('')+'</select>';
+}
+function wtSel(id,val){
+  return '<select id="'+id+'" style="font-size:13px">'+WT.map(t=>'<option'+(t===val?' selected':'')+'>'+t+'</option>').join('')+'</select>';
+}
+
+function tableHead(){
+  return '<table><thead><tr><th>Группа</th><th>Упражнение</th><th>Вес</th><th>Подх.</th><th>Повт.</th><th>Комментарий</th></tr></thead>';
+}
+
+function viewRows(rows){
+  return rows.map(r=>'<tr><td><span class="mtag">'+r.muscle+'</span></td><td style="font-weight:500">'+r.exercise+'</td><td style="white-space:nowrap">'+r.weight+(r.weight&&r.weight!=='—'?' кг':'')+'</td><td>'+r.sets+'</td><td>'+r.reps+'</td><td class="note">'+r.note+'</td></tr>').join('');
+}
+
+function show(tab){
+  ['history','weeks','new','import'].forEach(t=>{
+    document.getElementById('p-'+t).style.display=t===tab?'':'none';
+    document.getElementById('t-'+t).classList.toggle('on',t===tab);
   });
-  if (!rows.length) { showFlash('Добавь хотя бы одно упражнение'); return; }
-  const w = {id: Date.now(), date, type, rows};
-  workouts = [w, ...workouts].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  expandedId = w.id;
-  save();
-  switchTab('history', document.querySelector('.tab'));
-  showFlash('Тренировка сохранена ✓');
+  if(tab==='history') renderHistory();
+  if(tab==='weeks') renderWeeks();
+  if(tab==='new') renderNew();
+  if(tab==='import') renderImport();
 }
 
-// ── IMPORT ──
-function renderImport() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('tab-import').innerHTML = `
-    <div class="form-section">
-      <div class="import-hint">
-        После тренировки скажи мне <em>«запиши в таблицу»</em> — я выдам таблицу в markdown. Скопируй её сюда и нажми «Импортировать».
-      </div>
-      <div class="field-row">
-        <div><div class="field-label">Дата</div><input type="date" id="imp-date" value="${today}"></div>
-        <div><div class="field-label">Тип</div>
-          <select id="imp-type">${WORKOUT_TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
-        </div>
-      </div>
-      <textarea id="imp-text" rows="10" placeholder="Вставь сюда таблицу от Claude:&#10;&#10;| Группа | Упражнение | Вес | Подх. | Повт. | Комментарий |&#10;|---|---|---|---|---|---|&#10;| Спина | Тяга в наклоне | 55/50 | 3 | 10/10/10 | ... |" style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #ddd;border-radius:3px;padding:10px;resize:vertical;line-height:1.5;margin-bottom:10px"></textarea>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-p" onclick="handleImport()">Импортировать</button>
-        <button class="btn btn-g" onclick="document.getElementById('imp-text').value=''">Очистить</button>
-      </div>
-    </div>`;
+function render(){ renderHistory(); }
+
+function renderHistory(){
+  const el=document.getElementById('p-history');
+  if(!W.length){el.innerHTML='<div class="empty">Нет тренировок. Нажми «+ Новая».</div>';return;}
+  el.innerHTML=W.map(w=>{
+    const isOpen=openId===w.id;
+    const isEdit=editId===w.id;
+    let body='';
+    if(isEdit){
+      body='<div style="overflow-x:auto">'+tableHead()+'<tbody id="etb">'+eRows.map((r,i)=>editRowHtml(r,i)).join('')+'</tbody></table></div>'
+      +'<div class="edit-bar">'
+      +'<input type="date" id="ed" value="'+eDate+'" style="width:auto">'
+      +wtSel('et',eType)
+      +'<button class="btn btn-outline" onclick="addER()" style="font-size:12px">+ Строка</button>'
+      +'<button class="btn btn-dark" onclick="saveEdit('+w.id+')" style="font-size:12px">Сохранить</button>'
+      +'<button class="btn btn-outline" onclick="cancelEdit()" style="font-size:12px">Отмена</button>'
+      +'</div>';
+    } else if(isOpen){
+      body='<div style="overflow-x:auto">'+tableHead()+'<tbody>'+viewRows(w.rows)+'</tbody></table></div>';
+    }
+    return '<div class="card"><div class="card-head" onclick="toggleCard('+w.id+')">'
+      +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+      +'<span class="badge">'+fmtDate(w.date)+'</span>'
+      +'<span style="font-size:12px;color:#888">'+w.type+'</span>'
+      +'<span style="font-size:11px;color:#ccc">'+w.rows.length+' упр.</span>'
+      +'</div>'
+      +'<div class="actions" onclick="event.stopPropagation()">'
+      +'<button class="btn btn-yellow" style="font-size:11px;padding:4px 9px" onclick="startEdit('+w.id+')">Изменить</button>'
+      +'<button class="btn btn-outline" style="font-size:11px;padding:4px 9px" onclick="delW('+w.id+')">Удалить</button>'
+      +'</div>'
+      +'</div>'+body+'</div>';
+  }).join('');
 }
 
-function handleImport() {
-  const text = document.getElementById('imp-text').value;
-  const date = document.getElementById('imp-date').value;
-  const type = document.getElementById('imp-type').value;
-  if (!text.trim()) { showFlash('Вставь таблицу от Claude'); return; }
-  const lines = text.trim().split('\n');
-  const rows = [];
-  for (const line of lines) {
-    if (!line.startsWith('|') || line.includes('---') || line.toLowerCase().includes('группа')) continue;
-    const cells = line.split('|').map(c=>c.trim()).filter((_,i,a)=>i>0&&i<a.length-1);
-    if (cells.length < 5) continue;
-    const [muscle, exercise, weight, sets, reps, ...noteParts] = cells;
-    rows.push({muscle, exercise, weight:weight.replace(/кг/gi,'').trim(), sets, reps, note:noteParts.join(' | ').trim()});
-  }
-  if (!rows.length) { showFlash('Не удалось распознать — убедись что формат правильный'); return; }
-  const w = {id: Date.now(), date, type, rows};
-  workouts = [w, ...workouts].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  expandedId = w.id;
-  save();
-  switchTab('history', document.querySelector('.tab'));
-  showFlash(`Импортировано ${rows.length} упражнений ✓`);
+function editRowHtml(r,i){
+  return '<tr class="inp-row">'
+    +'<td>'+mgSel(r.muscle,'updER('+i+',\'muscle\',this.value)')+'</td>'
+    +'<td><input value="'+r.exercise+'" oninput="updER('+i+',\'exercise\',this.value)" placeholder="Упражнение" style="width:140px"></td>'
+    +'<td><input value="'+r.weight+'" oninput="updER('+i+',\'weight\',this.value)" placeholder="80" style="width:55px"></td>'
+    +'<td><input value="'+r.sets+'" oninput="updER('+i+',\'sets\',this.value)" placeholder="3" style="width:40px"></td>'
+    +'<td><input value="'+r.reps+'" oninput="updER('+i+',\'reps\',this.value)" placeholder="8" style="width:40px"></td>'
+    +'<td><input value="'+r.note+'" oninput="updER('+i+',\'note\',this.value)" placeholder="Заметка" style="width:120px"></td>'
+    +'<td><button class="del" onclick="removeER('+i+')">✕</button></td>'
+    +'</tr>';
 }
 
-// ── EXPORT ──
-function handleExport() {
-  if (!workouts.length) { showFlash('Нет данных'); return; }
-  const lines = ['=== МОЙ ЖУРНАЛ ТРЕНИРОВОК ===\n'];
-  workouts.slice(0,20).forEach(w => {
-    lines.push(`📅 ${fmtDate(w.date)} — ${w.type}`);
-    w.rows.forEach(r => {
-      let s = `  • ${r.muscle?'['+r.muscle+'] ':''}${r.exercise}`;
-      if (r.weight && r.weight!=='—') s += ` — ${r.weight}кг`;
-      if (r.sets) s += `, ${r.sets} подх`;
-      if (r.reps) s += ` × ${r.reps}`;
-      if (r.note) s += ` (${r.note})`;
+function toggleCard(id){ openId=openId===id?null:id; renderHistory(); }
+function startEdit(id){
+  const w=W.find(x=>x.id===id);
+  editId=id; eRows=w.rows.map(r=>({...r})); eDate=w.date; eType=w.type; openId=id;
+  renderHistory();
+}
+function cancelEdit(){ editId=null; eRows=[]; renderHistory(); }
+function updER(i,f,v){ eRows[i][f]=v; }
+function addER(){
+  eRows.push({muscle:'',exercise:'',weight:'',sets:'',reps:'',note:''});
+  const tb=document.getElementById('etb');
+  if(tb) tb.innerHTML=eRows.map((r,i)=>editRowHtml(r,i)).join('');
+}
+function removeER(i){
+  eRows.splice(i,1);
+  const tb=document.getElementById('etb');
+  if(tb) tb.innerHTML=eRows.map((r,i)=>editRowHtml(r,i)).join('');
+}
+function saveEdit(id){
+  const d=document.getElementById('ed').value;
+  const t=document.getElementById('et').value;
+  const filled=eRows.filter(r=>r.exercise.trim());
+  if(!filled.length){flash('Добавь хотя бы одно упражнение');return;}
+  W=W.map(w=>w.id===id?{...w,date:d||w.date,type:t,rows:filled}:w).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  editId=null; eRows=[]; save(); renderHistory(); flash('Сохранено ✓');
+}
+function delW(id){ if(!confirm('Удалить?'))return; W=W.filter(w=>w.id!==id); save(); renderHistory(); }
+
+function renderWeeks(){
+  const el=document.getElementById('p-weeks');
+  const wks=[...new Set(W.map(w=>wkKey(w.date)))].sort((a,b)=>b.localeCompare(a));
+  const fv=document.getElementById('wf')?document.getElementById('wf').value:'';
+  const filtered=fv?W.filter(w=>wkKey(w.date)===fv):W;
+  el.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">'
+    +'<span style="font-size:11px;color:#aaa;text-transform:uppercase">Неделя:</span>'
+    +'<select id="wf" onchange="renderWeeks()" style="width:auto">'
+    +'<option value="">Все</option>'
+    +wks.map(k=>'<option value="'+k+'"'+(k===fv?' selected':'')+'>'+wkLabel(k)+'</option>').join('')
+    +'</select></div>'
+    +(filtered.length===0?'<div class="empty">Нет тренировок</div>':
+    filtered.map(w=>'<div style="margin-bottom:20px">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      +'<span class="badge">'+fmtDate(w.date)+'</span>'
+      +'<span style="font-size:12px;color:#888">'+w.type+'</span></div>'
+      +'<div style="overflow-x:auto;border:1px solid #e2ddd5;border-radius:4px;background:#fff">'
+      +tableHead()+'<tbody>'+viewRows(w.rows)+'</tbody></table></div></div>').join(''));
+}
+
+function renderNew(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('p-new').innerHTML=
+    '<div class="card" style="padding:14px">'
+    +'<div class="row">'
+    +'<div class="field"><span class="label">Дата</span><input type="date" id="nd" value="'+today+'" style="width:auto"></div>'
+    +'<div class="field"><span class="label">Тип</span>'+wtSel('nt','Full Body')+'</div>'
+    +'</div>'
+    +'<div style="overflow-x:auto;border:1px solid #e2ddd5;border-radius:4px;margin-bottom:10px">'
+    +'<table><thead><tr><th style="min-width:100px">Группа</th><th style="min-width:140px">Упражнение</th><th>Вес</th><th>Подх.</th><th>Повт.</th><th style="min-width:130px">Комментарий</th><th></th></tr></thead>'
+    +'<tbody id="ntb"><tr class="inp-row">'
+    +'<td>'+mgSel('','')+'</td>'
+    +'<td><input placeholder="Упражнение" style="width:130px"></td>'
+    +'<td><input placeholder="80" style="width:55px"></td>'
+    +'<td><input placeholder="3" style="width:40px"></td>'
+    +'<td><input placeholder="8" style="width:40px"></td>'
+    +'<td><input placeholder="Заметка" style="width:120px"></td>'
+    +'<td><button class="del" onclick="this.closest(\'tr\').remove()">✕</button></td>'
+    +'</tr></tbody></table></div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn btn-outline" onclick="addNR()">+ Строка</button>'
+    +'<button class="btn btn-dark" onclick="saveNew()">Сохранить</button>'
+    +'</div></div>';
+}
+
+function addNR(){
+  const tb=document.getElementById('ntb');
+  const tr=document.createElement('tr'); tr.className='inp-row';
+  tr.innerHTML='<td>'+mgSel('','')+'</td>'
+    +'<td><input placeholder="Упражнение" style="width:130px"></td>'
+    +'<td><input placeholder="80" style="width:55px"></td>'
+    +'<td><input placeholder="3" style="width:40px"></td>'
+    +'<td><input placeholder="8" style="width:40px"></td>'
+    +'<td><input placeholder="Заметка" style="width:120px"></td>'
+    +'<td><button class="del" onclick="this.closest(\'tr\').remove()">✕</button></td>';
+  tb.appendChild(tr);
+}
+
+function saveNew(){
+  const date=document.getElementById('nd').value;
+  const type=document.getElementById('nt').value;
+  const rows=[];
+  document.querySelectorAll('#ntb tr').forEach(tr=>{
+    const ins=tr.querySelectorAll('input,select');
+    const ex=ins[1].value.trim();
+    if(!ex)return;
+    rows.push({muscle:ins[0].value,exercise:ex,weight:ins[2].value,sets:ins[3].value,reps:ins[4].value,note:ins[5].value});
+  });
+  if(!rows.length){flash('Добавь хотя бы одно упражнение');return;}
+  const w={id:Date.now(),date,type,rows};
+  W=[w,...W].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  openId=w.id; save(); show('history'); flash('Тренировка сохранена ✓');
+}
+
+function renderImport(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('p-import').innerHTML=
+    '<div class="card" style="padding:14px">'
+    +'<p style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6">Скажи Claude «запиши в таблицу» → скопируй markdown таблицу → вставь сюда → нажми «Импортировать».</p>'
+    +'<div class="row">'
+    +'<div class="field"><span class="label">Дата</span><input type="date" id="id" value="'+today+'" style="width:auto"></div>'
+    +'<div class="field"><span class="label">Тип</span>'+wtSel('it','Full Body')+'</div>'
+    +'</div>'
+    +'<textarea id="itxt" rows="8" placeholder="| Группа | Упражнение | Вес | Подх. | Повт. | Комментарий |&#10;|---|---|---|---|---|---|&#10;| Спина | Тяга в наклоне | 55/50 | 3 | 10/10/10 | ... |" style="margin-bottom:10px;font-family:monospace;font-size:11px"></textarea>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn btn-dark" onclick="doImport()">Импортировать</button>'
+    +'<button class="btn btn-outline" onclick="document.getElementById(\'itxt\').value=\'\'">Очистить</button>'
+    +'</div></div>';
+}
+
+function doImport(){
+  const txt=document.getElementById('itxt').value;
+  const date=document.getElementById('id').value;
+  const type=document.getElementById('it').value;
+  if(!txt.trim()){flash('Вставь таблицу');return;}
+  const rows=[];
+  txt.split('\n').forEach(line=>{
+    if(!line.startsWith('|')||line.includes('---')||line.toLowerCase().includes('группа'))return;
+    const cells=line.split('|').map(c=>c.trim()).filter((_,i,a)=>i>0&&i<a.length-1);
+    if(cells.length<5)return;
+    const [muscle,exercise,weight,sets,reps,...np]=cells;
+    rows.push({muscle,exercise,weight:weight.replace(/кг/gi,'').trim(),sets,reps,note:np.join('|').trim()});
+  });
+  if(!rows.length){flash('Не удалось распознать формат');return;}
+  const w={id:Date.now(),date,type,rows};
+  W=[w,...W].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  openId=w.id; save(); show('history'); flash('Импортировано '+rows.length+' упражнений ✓');
+}
+
+function doExport(){
+  if(!W.length){flash('Нет данных');return;}
+  const lines=['=== МОЙ ЖУРНАЛ ТРЕНИРОВОК ===\n'];
+  W.slice(0,20).forEach(w=>{
+    lines.push('📅 '+fmtDate(w.date)+' — '+w.type);
+    w.rows.forEach(r=>{
+      let s='  • '+(r.muscle?'['+r.muscle+'] ':'')+r.exercise;
+      if(r.weight&&r.weight!=='—')s+=' — '+r.weight+'кг';
+      if(r.sets)s+=', '+r.sets+' подх';
+      if(r.reps)s+=' × '+r.reps;
+      if(r.note)s+=' ('+r.note+')';
       lines.push(s);
     });
     lines.push('');
   });
   lines.push('=== КОНЕЦ ЖУРНАЛА ===');
   navigator.clipboard.writeText(lines.join('\n'))
-    .then(() => showFlash('Скопировано! Вставь в новый чат с Claude ✓'))
-    .catch(() => showFlash('Ошибка копирования'));
+    .then(()=>flash('Скопировано! Вставь Claude ✓'))
+    .catch(()=>flash('Ошибка копирования'));
 }
 
 load();
