@@ -16,8 +16,11 @@ body{font-family:system-ui,sans-serif;background:#f4f2ed;color:#1c1c1c;font-size
 .card{background:#fff;border:1px solid #e2ddd5;border-radius:6px;margin-bottom:10px;overflow:hidden}
 .card-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
 .card-head:active{background:#f5f3ee}
-.badge{background:#1c1c1c;color:#fff;font-size:11px;padding:3px 8px;border-radius:3px}
-.card-body{overflow-x:auto;border-top:1px solid #f0ece4}
+.badge{background:#1c1c1c;color:#fff;font-size:11px;padding:3px 8px;border-radius:3px;white-space:nowrap}
+.week-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#f0ede6;border-bottom:1px solid #e2ddd5}
+.week-head:active{background:#e8e4dc}
+.week-title{font-size:14px;font-weight:600}
+.week-sub{font-size:11px;color:#888;margin-top:2px}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:7px 10px;font-size:10px;font-weight:600;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e2ddd5;background:#f9f8f5}
 td{padding:8px 10px;border-bottom:1px solid #f0ece4;vertical-align:top}
@@ -28,6 +31,7 @@ td{padding:8px 10px;border-bottom:1px solid #f0ece4;vertical-align:top}
 .btn-outline{background:none;border:1px solid #ccc;color:#555}
 .btn-yellow{background:#fffbf0;border:1px solid #e6c84a;color:#7a5c00}
 .btn-green{background:#e8f5e0;border:1px solid #a8d878;color:#3a6a10}
+.btn-blue{background:#e8f0fe;border:1px solid #93b4f5;color:#1a56db}
 input,select,textarea{font-family:inherit;font-size:13px;color:#1c1c1c;background:#fff;border:1px solid #ddd;border-radius:4px;padding:6px 9px;width:100%}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
 .field{display:flex;flex-direction:column;gap:4px}
@@ -36,7 +40,7 @@ input,select,textarea{font-family:inherit;font-size:13px;color:#1c1c1c;backgroun
 .empty{text-align:center;color:#bbb;padding:50px 0;font-size:13px}
 .inp-row td{padding:4px 5px;background:#fafaf7}
 .del{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:2px 5px}
-.actions{display:flex;gap:6px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
 .edit-bar{padding:10px 14px;background:#fffbf0;border-top:1px solid #e6c84a;display:flex;gap:8px;flex-wrap:wrap}
 </style>
 </head>
@@ -62,9 +66,8 @@ input,select,textarea{font-family:inherit;font-size:13px;color:#1c1c1c;backgroun
 </div>
 <script>
 const KEY='wlog-v4';
-const MG=['Грудь','Спина','Плечи','Бицепс','Трицепс','Ноги','Ягодицы','Кор','Full Body','Другое'];
 const WT=['Full Body','Грудь + Трицепс','Спина + Бицепс','Ноги','Плечи','Другое'];
-let W=[],openId=null,editId=null,eRows=[],eDate='',eType='';
+let W=[],openId=null,editId=null,eRows=[],eDate='',eType='',openWeeks=new Set();
 
 const PRE=[
   {id:1746700000001,date:'2026-05-12',type:'Грудь + Трицепс',rows:[
@@ -110,7 +113,6 @@ function load(){
 
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify(W));}catch(e){}
-  document.getElementById('flash'); // just touch DOM
 }
 
 function flash(msg){
@@ -128,6 +130,15 @@ function wkKey(d){
   const m=new Date(dt); m.setDate(dt.getDate()-(dy-1));
   return m.toISOString().split('T')[0];
 }
+
+function wkNum(d){
+  const dt=new Date(d+'T12:00:00');
+  const jan4=new Date(dt.getFullYear(),0,4);
+  const startOfWeek1=new Date(jan4);
+  startOfWeek1.setDate(jan4.getDate()-(jan4.getDay()||7)+1);
+  return Math.ceil((dt-startOfWeek1)/(7*86400000))+1;
+}
+
 function wkLabel(d){
   const dt=new Date(d),dy=dt.getDay()||7;
   const m=new Date(dt); m.setDate(dt.getDate()-(dy-1));
@@ -136,11 +147,8 @@ function wkLabel(d){
   return f(m)+' – '+f(s);
 }
 
-function mgSel(val,onch){ return '<input value="'+val+'" oninput="'+onch+'" placeholder="Группа мышц" style="font-size:11px;padding:3px 5px;width:100px">'; }
-
-}
 function wtSel(id,val){
-  return '<select id="'+id+'" style="font-size:13px">'+WT.map(t=>'<option'+(t===val?' selected':'')+'>'+t+'</option>').join('')+'</select>';
+  return '<select id="'+id+'" style="font-size:13px;width:auto">'+WT.map(t=>'<option'+(t===val?' selected':'')+'>'+t+'</option>').join('')+'</select>';
 }
 
 function tableHead(){
@@ -149,6 +157,27 @@ function tableHead(){
 
 function viewRows(rows){
   return rows.map(r=>'<tr><td><span class="mtag">'+r.muscle+'</span></td><td style="font-weight:500">'+r.exercise+'</td><td style="white-space:nowrap">'+r.weight+(r.weight&&r.weight!=='—'?' кг':'')+'</td><td>'+r.sets+'</td><td>'+r.reps+'</td><td class="note">'+r.note+'</td></tr>').join('');
+}
+
+function workoutText(w){
+  const lines=['📅 '+fmtDate(w.date)+' — '+w.type];
+  w.rows.forEach(r=>{
+    let s='  • '+(r.muscle?'['+r.muscle+'] ':'')+r.exercise;
+    if(r.weight&&r.weight!=='—')s+=' — '+r.weight+'кг';
+    if(r.sets)s+=', '+r.sets+' подх';
+    if(r.reps)s+=' × '+r.reps;
+    if(r.note)s+=' ('+r.note+')';
+    lines.push(s);
+  });
+  return lines.join('\n');
+}
+
+function copyWorkout(id){
+  const w=W.find(x=>x.id===id);
+  if(!w)return;
+  navigator.clipboard.writeText(workoutText(w))
+    .then(()=>flash('Тренировка скопирована ✓'))
+    .catch(()=>flash('Ошибка копирования'));
 }
 
 function show(tab){
@@ -163,6 +192,18 @@ function show(tab){
 }
 
 function render(){ renderHistory(); }
+
+function editRowHtml(r,i){
+  return '<tr class="inp-row">'
+    +'<td><input value="'+r.muscle+'" oninput="updER('+i+',\'muscle\',this.value)" placeholder="Группа" style="width:85px;font-size:11px;padding:3px 5px"></td>'
+    +'<td><input value="'+r.exercise+'" oninput="updER('+i+',\'exercise\',this.value)" placeholder="Упражнение" style="width:140px"></td>'
+    +'<td><input value="'+r.weight+'" oninput="updER('+i+',\'weight\',this.value)" placeholder="80" style="width:55px"></td>'
+    +'<td><input value="'+r.sets+'" oninput="updER('+i+',\'sets\',this.value)" placeholder="3" style="width:40px"></td>'
+    +'<td><input value="'+r.reps+'" oninput="updER('+i+',\'reps\',this.value)" placeholder="8" style="width:40px"></td>'
+    +'<td><input value="'+r.note+'" oninput="updER('+i+',\'note\',this.value)" placeholder="Заметка" style="width:120px"></td>'
+    +'<td><button class="del" onclick="removeER('+i+')">✕</button></td>'
+    +'</tr>';
+}
 
 function renderHistory(){
   const el=document.getElementById('p-history');
@@ -190,23 +231,12 @@ function renderHistory(){
       +'<span style="font-size:11px;color:#ccc">'+w.rows.length+' упр.</span>'
       +'</div>'
       +'<div class="actions" onclick="event.stopPropagation()">'
+      +'<button class="btn btn-blue" style="font-size:11px;padding:4px 9px" onclick="copyWorkout('+w.id+')">📋</button>'
       +'<button class="btn btn-yellow" style="font-size:11px;padding:4px 9px" onclick="startEdit('+w.id+')">Изменить</button>'
       +'<button class="btn btn-outline" style="font-size:11px;padding:4px 9px" onclick="delW('+w.id+')">Удалить</button>'
       +'</div>'
       +'</div>'+body+'</div>';
   }).join('');
-}
-
-function editRowHtml(r,i){
-  return '<tr class="inp-row">'
-    +'<td>'+mgSel(r.muscle,'updER('+i+',\'muscle\',this.value)')+'</td>'
-    +'<td><input value="'+r.exercise+'" oninput="updER('+i+',\'exercise\',this.value)" placeholder="Упражнение" style="width:140px"></td>'
-    +'<td><input value="'+r.weight+'" oninput="updER('+i+',\'weight\',this.value)" placeholder="80" style="width:55px"></td>'
-    +'<td><input value="'+r.sets+'" oninput="updER('+i+',\'sets\',this.value)" placeholder="3" style="width:40px"></td>'
-    +'<td><input value="'+r.reps+'" oninput="updER('+i+',\'reps\',this.value)" placeholder="8" style="width:40px"></td>'
-    +'<td><input value="'+r.note+'" oninput="updER('+i+',\'note\',this.value)" placeholder="Заметка" style="width:120px"></td>'
-    +'<td><button class="del" onclick="removeER('+i+')">✕</button></td>'
-    +'</tr>';
 }
 
 function toggleCard(id){ openId=openId===id?null:id; renderHistory(); }
@@ -237,24 +267,58 @@ function saveEdit(id){
 }
 function delW(id){ if(!confirm('Удалить?'))return; W=W.filter(w=>w.id!==id); save(); renderHistory(); }
 
+function toggleWeek(key){
+  if(openWeeks.has(key)) openWeeks.delete(key);
+  else openWeeks.add(key);
+  renderWeeks();
+}
+
 function renderWeeks(){
   const el=document.getElementById('p-weeks');
   const wks=[...new Set(W.map(w=>wkKey(w.date)))].sort((a,b)=>b.localeCompare(a));
-  const fv=document.getElementById('wf')?document.getElementById('wf').value:'';
-  const filtered=fv?W.filter(w=>wkKey(w.date)===fv):W;
-  el.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">'
-    +'<span style="font-size:11px;color:#aaa;text-transform:uppercase">Неделя:</span>'
-    +'<select id="wf" onchange="renderWeeks()" style="width:auto">'
-    +'<option value="">Все</option>'
-    +wks.map(k=>'<option value="'+k+'"'+(k===fv?' selected':'')+'>'+wkLabel(k)+'</option>').join('')
-    +'</select></div>'
-    +(filtered.length===0?'<div class="empty">Нет тренировок</div>':
-    filtered.map(w=>'<div style="margin-bottom:20px">'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
-      +'<span class="badge">'+fmtDate(w.date)+'</span>'
-      +'<span style="font-size:12px;color:#888">'+w.type+'</span></div>'
-      +'<div style="overflow-x:auto;border:1px solid #e2ddd5;border-radius:4px;background:#fff">'
-      +tableHead()+'<tbody>'+viewRows(w.rows)+'</tbody></table></div></div>').join(''));
+  if(!wks.length){el.innerHTML='<div class="empty">Нет тренировок</div>';return;}
+  el.innerHTML=wks.map(key=>{
+    const wws=W.filter(w=>wkKey(w.date)===key);
+    const isOpen=openWeeks.has(key);
+    const num=wkNum(key);
+    const label=wkLabel(key);
+    const year=new Date(key+'T12:00:00').getFullYear();
+    let body='';
+    if(isOpen){
+      body=wws.map(w=>'<div style="border-top:1px solid #e2ddd5;padding:12px 14px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<span class="badge">'+fmtDate(w.date)+'</span>'
+        +'<span style="font-size:12px;color:#888">'+w.type+'</span>'
+        +'</div>'
+        +'<button class="btn btn-blue" style="font-size:11px;padding:4px 9px" onclick="copyWorkout('+w.id+')">📋 Скопировать</button>'
+        +'</div>'
+        +'<div style="overflow-x:auto">'+tableHead()+'<tbody>'+viewRows(w.rows)+'</tbody></table></div>'
+        +'</div>').join('');
+    }
+    return '<div class="card">'
+      +'<div class="week-head" onclick="toggleWeek(\''+key+'\')">  '
+      +'<div>'
+      +'<div class="week-title">Неделя '+num+' · '+year+'</div>'
+      +'<div class="week-sub">'+label+' · '+wws.length+' тр.</div>'
+      +'</div>'
+      +'<span style="color:#bbb;font-size:12px">'+(isOpen?'▲':'▼')+'</span>'
+      +'</div>'
+      +body
+      +'</div>';
+  }).join('');
+}
+
+function newRowHtml(){
+  return '<tr class="inp-row">'
+    +'<td><input placeholder="Группа" style="width:85px;font-size:11px;padding:3px 5px"></td>'
+    +'<td><input placeholder="Упражнение" style="width:130px"></td>'
+    +'<td><input placeholder="80" style="width:55px"></td>'
+    +'<td><input placeholder="3" style="width:40px"></td>'
+    +'<td><input placeholder="8" style="width:40px"></td>'
+    +'<td><input placeholder="Заметка" style="width:120px"></td>'
+    +'<td><button class="del" onclick="this.closest(\'tr\').remove()">✕</button></td>'
+    +'</tr>';
 }
 
 function renderNew(){
@@ -266,16 +330,8 @@ function renderNew(){
     +'<div class="field"><span class="label">Тип</span>'+wtSel('nt','Full Body')+'</div>'
     +'</div>'
     +'<div style="overflow-x:auto;border:1px solid #e2ddd5;border-radius:4px;margin-bottom:10px">'
-    +'<table><thead><tr><th style="min-width:100px">Группа</th><th style="min-width:140px">Упражнение</th><th>Вес</th><th>Подх.</th><th>Повт.</th><th style="min-width:130px">Комментарий</th><th></th></tr></thead>'
-    +'<tbody id="ntb"><tr class="inp-row">'
-    +'<td>'+mgSel('','')+'</td>'
-    +'<td><input placeholder="Упражнение" style="width:130px"></td>'
-    +'<td><input placeholder="80" style="width:55px"></td>'
-    +'<td><input placeholder="3" style="width:40px"></td>'
-    +'<td><input placeholder="8" style="width:40px"></td>'
-    +'<td><input placeholder="Заметка" style="width:120px"></td>'
-    +'<td><button class="del" onclick="this.closest(\'tr\').remove()">✕</button></td>'
-    +'</tr></tbody></table></div>'
+    +'<table><thead><tr><th style="min-width:90px">Группа</th><th style="min-width:140px">Упражнение</th><th>Вес</th><th>Подх.</th><th>Повт.</th><th style="min-width:120px">Комментарий</th><th></th></tr></thead>'
+    +'<tbody id="ntb">'+newRowHtml()+'</tbody></table></div>'
     +'<div style="display:flex;gap:8px">'
     +'<button class="btn btn-outline" onclick="addNR()">+ Строка</button>'
     +'<button class="btn btn-dark" onclick="saveNew()">Сохранить</button>'
@@ -285,13 +341,7 @@ function renderNew(){
 function addNR(){
   const tb=document.getElementById('ntb');
   const tr=document.createElement('tr'); tr.className='inp-row';
-  tr.innerHTML='<td>'+mgSel('','')+'</td>'
-    +'<td><input placeholder="Упражнение" style="width:130px"></td>'
-    +'<td><input placeholder="80" style="width:55px"></td>'
-    +'<td><input placeholder="3" style="width:40px"></td>'
-    +'<td><input placeholder="8" style="width:40px"></td>'
-    +'<td><input placeholder="Заметка" style="width:120px"></td>'
-    +'<td><button class="del" onclick="this.closest(\'tr\').remove()">✕</button></td>';
+  tr.innerHTML=newRowHtml().replace('<tr class="inp-row">','').replace('</tr>','');
   tb.appendChild(tr);
 }
 
@@ -300,7 +350,7 @@ function saveNew(){
   const type=document.getElementById('nt').value;
   const rows=[];
   document.querySelectorAll('#ntb tr').forEach(tr=>{
-    const ins=tr.querySelectorAll('input,select');
+    const ins=tr.querySelectorAll('input');
     const ex=ins[1].value.trim();
     if(!ex)return;
     rows.push({muscle:ins[0].value,exercise:ex,weight:ins[2].value,sets:ins[3].value,reps:ins[4].value,note:ins[5].value});
@@ -315,12 +365,12 @@ function renderImport(){
   const today=new Date().toISOString().split('T')[0];
   document.getElementById('p-import').innerHTML=
     '<div class="card" style="padding:14px">'
-    +'<p style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6">Скажи Claude «запиши в таблицу» → скопируй markdown таблицу → вставь сюда → нажми «Импортировать».</p>'
+    +'<p style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6">Скажи Claude «запиши в таблицу» → скопируй таблицу → вставь сюда → нажми «Импортировать».</p>'
     +'<div class="row">'
     +'<div class="field"><span class="label">Дата</span><input type="date" id="id" value="'+today+'" style="width:auto"></div>'
     +'<div class="field"><span class="label">Тип</span>'+wtSel('it','Full Body')+'</div>'
     +'</div>'
-    +'<textarea id="itxt" rows="8" placeholder="| Группа | Упражнение | Вес | Подх. | Повт. | Комментарий |&#10;|---|---|---|---|---|---|&#10;| Спина | Тяга в наклоне | 55/50 | 3 | 10/10/10 | ... |" style="margin-bottom:10px;font-family:monospace;font-size:11px"></textarea>'
+    +'<textarea id="itxt" rows="8" placeholder="| Группа | Упражнение | Вес | Подх. | Повт. | Комментарий |" style="margin-bottom:10px;font-family:monospace;font-size:11px"></textarea>'
     +'<div style="display:flex;gap:8px">'
     +'<button class="btn btn-dark" onclick="doImport()">Импортировать</button>'
     +'<button class="btn btn-outline" onclick="document.getElementById(\'itxt\').value=\'\'">Очистить</button>'
@@ -348,22 +398,17 @@ function doImport(){
 
 function doExport(){
   if(!W.length){flash('Нет данных');return;}
-  const lines=['=== МОЙ ЖУРНАЛ ТРЕНИРОВОК ===\n'];
-  W.slice(0,20).forEach(w=>{
-    lines.push('📅 '+fmtDate(w.date)+' — '+w.type);
-    w.rows.forEach(r=>{
-      let s='  • '+(r.muscle?'['+r.muscle+'] ':'')+r.exercise;
-      if(r.weight&&r.weight!=='—')s+=' — '+r.weight+'кг';
-      if(r.sets)s+=', '+r.sets+' подх';
-      if(r.reps)s+=' × '+r.reps;
-      if(r.note)s+=' ('+r.note+')';
-      lines.push(s);
-    });
+  const lastKey=wkKey(W[0].date);
+  const lastWeek=W.filter(w=>wkKey(w.date)===lastKey);
+  const num=wkNum(lastKey);
+  const lines=['=== НЕДЕЛЯ '+num+' ('+wkLabel(lastKey)+') ===\n'];
+  lastWeek.forEach(w=>{
+    lines.push(workoutText(w));
     lines.push('');
   });
-  lines.push('=== КОНЕЦ ЖУРНАЛА ===');
+  lines.push('=== КОНЕЦ ===');
   navigator.clipboard.writeText(lines.join('\n'))
-    .then(()=>flash('Скопировано! Вставь Claude ✓'))
+    .then(()=>flash('Последняя неделя скопирована ✓'))
     .catch(()=>flash('Ошибка копирования'));
 }
 
